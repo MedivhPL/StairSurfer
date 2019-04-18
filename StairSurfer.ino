@@ -50,7 +50,7 @@
 #define CSR A1 //(C)liff (S)ensor (R)ight
 #define CSRT 820//(C)liff (S)ensor (R)ight (T)reshold
 #define DSF A2//(D)istance (S)ensor (F)ront
-#define DSFT 300 //Threshold
+#define DSFT 500 //Threshold
 #define DSTF A4//(D)istance (S)ensor (T)op (F)ront
 #define DSTFT 300 //Threshold
 #define DSTB A3//(D)istance (S)ensor (T)op (B)ack
@@ -64,10 +64,10 @@
 // Macros for travelling
 #define FIRSTPASS 0
 #define SECONDPASS 1
-#define TURNING_CCW1 2
-#define TURNING_CCW2 3
+#define TURNING_CW 2
+#define TURNING_CW1 5
+#define TURNING_CCW 3
 #define DONE 4
-#define TURNING_CW 5
 // Macros for alligning
 #define ALIGNED 0
 #define ADJUST_DIR 1
@@ -81,15 +81,27 @@
 #define CHECK_STEPS 5
 #define STOP 6
 
+#define SENSOR_AMOUNT 10
+#define SIZE_OF_BUFFER 10
+
+#include <Wire.h>
+#include <SPI.h>
+#include <Adafruit_LIS3DH.h>
+#include <Adafruit_Sensor.h>
+
+Adafruit_LIS3DH axl1 = Adafruit_LIS3DH();
+Adafruit_LIS3DH axl2 = Adafruit_LIS3DH();
+
+
 bool Ready = false;
 bool Cleaning = false;
 int Descend = 0;
 int Sensor_Trigger = 0;
 int Speed_Low = 125;
-int Speed_Medium = 175;
+int Speed_Medium = 205;
 int Speed_Fast = 250; 
-int SensorMeasurements[7][10];
-int BufferOut[7];
+int SensorMeasurements[SENSOR_AMOUNT][SIZE_OF_BUFFER];
+int BufferOut[SENSOR_AMOUNT];
 int stair_pass;
 
 
@@ -128,61 +140,73 @@ void setup() {
 	pinMode(VMPWM, OUTPUT);
 // other
 	pinMode(GOUP, INPUT);
-	pinMode(GODOWN, INPUT);
+	pinMode(GODOWN, INPUT_PULLUP);
 	pinMode(LIGHT,OUTPUT);
-	Serial.begin(9600);
+	Serial.begin(115200);
+	delay(20);
+	Serial.println("A1xell Setup");
+	delay(20);
+	//AXLSetup();
+	Serial.println("End of Setup");
   }
 
 void loop() {
   // put your main code here, to run repeatedly:
-//Test_Forward(200);
 
-//Test_Backward(200);
+//Motors_Test();
+//		HingeUp(Speed_Medium);
+	if(digitalRead(GOUP)){
+		Ready =true;
+		stair_pass = TURNING_CW;
+		// Test_Forward(200);
+		// Motors_Test();
+		 // Move_back(Speed_Medium);
+		// Stop();
+		Serial.println("Start");
+		}
+		
+	if(!digitalRead(GODOWN)){
+		// Motor1(-Speed_Low);
+		// Motor2(Speed_Low);
+		// Motor3(-Speed_Low);
+		// Motor4(-Speed_Low);
+		//Test_Backward(200);
+		//HingeDown(Speed_Low);
+		Stop();
+		Serial.println("End");
+		}
+		
 
-if(digitalRead(GOUP) == true){
-	//Motors_Test();
-	Ready = true;
-	Serial.println("Start");
-	}
-	
-if(digitalRead(GODOWN) == true){
-	Stop();
-	Serial.println("End");
-	}
-	
-if(Ready){
-	Cleaning = checkCliff();
-}
-if(Cleaning) Travel_Stairs();
-	
-Serial.print(analogRead(CSL));
-Serial.print(",");
-Serial.println(analogRead(CSR));
-
-/* 		//Drive to the edge and check for cliff.
+ 		//Drive to the edge and check for cliff.
 	if(Ready){
-		if(Cliff_Sensor_Read(CSL) && Cliff_Sensor_Read(CSR)){
-			Move_forward(slow);
-		}
-		else{
-			Move_forward(slow);
-			HingeDown();
-			delay(200);
-			Break();
-			Stop();
-		}
+	Travel_Stairs();
 	}
 	
-*/
-Sensor_Read();
-/*
-for(int i =0;i<7;i++){
-  Serial.print(SensorMeasurements[i]);
-  Serial.print(",");
-}
-Serial.println();*/
-} 
 
+// delay(1000);
+// Stop();
+Sensor_Read();
+// static int max = 0,min = 10000,value;
+	int normalized[4];
+	normalized[0] = Normalize(BufferOut[5],735,53);
+	normalized[1] = Normalize(BufferOut[6],671,52);
+	normalized[2] = Normalize(BufferOut[3],650,43);
+    normalized[3] = Normalize(BufferOut[4],537,58);
+	//Serial.print("Normalized BackLeft = ");Serial.print(normalized[0]);
+	//Serial.print(" Normalized BackRight = ");Serial.println(normalized[1]);
+	Serial.print(" Normalized TopFront = ");Serial.print(normalized[2]);
+	Serial.print(" Normalized TopBack = ");Serial.print(normalized[3]);
+	
+	// Serial.print("Buffer BackLeft = ");Serial.print(BufferOut[5]);
+	// Serial.print(" Buffer BackRight = ");Serial.print(BufferOut[6]);
+	// Serial.print(" Buffer TopFront = ");Serial.print(BufferOut[3]);
+	// Serial.print(" Buffer TopBack = ");Serial.print(BufferOut[4]); 
+	Serial.print(" Buffer Front = ");Serial.println(BufferOut[2]); 
+
+	// Serial.print("Angle1 = ");Serial.print(BufferOut[7]); 
+	// Serial.print(", Angle2 = ");Serial.print(BufferOut[8]);
+	// Serial.print(", Angle Total = ");Serial.println(BufferOut[9]);
+}
 void Stop(void){
 	HingeOFF();	
 	MotorsOFF();
@@ -194,13 +218,13 @@ void Stop(void){
 
 void Test_Forward(int speed)
 {
-	analogWrite(M3PWM,speed);
-	digitalWrite(M3P1,HIGH);
-	digitalWrite(M3P2,LOW);
+	analogWrite(M1PWM,speed);
+	digitalWrite(M1P1,HIGH);
+	digitalWrite(M1P2,LOW);
 }	
 void Test_Backward(int speed)
 {
-	analogWrite(VMPWM,speed);
-	digitalWrite(VMP1,LOW);
-	digitalWrite(VMP2,HIGH);
+	analogWrite(HMPWM,speed);
+	digitalWrite(HMP1,LOW);
+	digitalWrite(HMP2,HIGH);
 }	
