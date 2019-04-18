@@ -43,7 +43,7 @@ bool checkCliff(void){
 			}
 			else{
 				MotorsOFF();
-				stair_pass = TURNING_CCW1;
+				stair_pass = TURNING_CW;
 				Ready = false;
 				return true;//descending = HINGE;
 			}			
