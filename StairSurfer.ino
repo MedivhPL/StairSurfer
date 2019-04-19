@@ -45,22 +45,24 @@
 #define SENSOR 2
 
 //Sensor values
-#define CSL A0//(C)liff (S)ensor (L)eft
-#define CSLT 700//(C)liff (S)ensor (L)eft (T)reshold
+#define CSL A0 //(C)liff (S)ensor (L)eft
+#define CSLT 700 //(C)liff (S)ensor (L)eft (T)reshold
 #define CSR A1 //(C)liff (S)ensor (R)ight
 #define CSRT 820//(C)liff (S)ensor (R)ight (T)reshold
-#define DSF A2//(D)istance (S)ensor (F)ront
-#define DSFT 500 //Threshold
-#define DSTF A4//(D)istance (S)ensor (T)op (F)ront
+#define DSF A2 //(D)istance (S)ensor (F)ront
+#define DSFT 400 //Threshold
+#define DSTF A4 //(D)istance (S)ensor (T)op (F)ront
 #define DSTFT 300 //Threshold
-#define DSTB A3//(D)istance (S)ensor (T)op (B)ack
+#define DSTB A3 //(D)istance (S)ensor (T)op (B)ack
 #define DSTBT 300 //Threshold
-#define DSBR A6//(D)istance (S)ensor (B)ackhalf (R)ight
+#define DSBR A6 //(D)istance (S)ensor (B)ackhalf (R)ight
 #define DSBRT 500 //Threshold
-#define DSBL A5//(D)istance (S)ensor (B)ackhalf (L)eft
+#define DSBL A5 //(D)istance (S)ensor (B)ackhalf (L)eft
 #define DSBLT 300 //Threshold
-#define AXT 1//(AX)ccelerometer (T)op
-#define AXB 1//(AX)ccelerometer (B)ottom
+#define AXTX 1350 //(AX)ccelerometer (T)op Ma(x)
+#define AXTN -1350 //(AX)ccelerometer (T)op Mi(n)
+#define AXBX 1300 //(AX)ccelerometer (B)ottom Ma(x)
+#define AXBN -1350 //(AX)ccelerometer (B)ottom Mi(n)
 // Macros for travelling
 #define FIRSTPASS 0
 #define SECONDPASS 1
@@ -81,6 +83,7 @@
 #define CHECK_STEPS 5
 #define STOP 6
 
+
 #define SENSOR_AMOUNT 10
 #define SIZE_OF_BUFFER 10
 
@@ -92,17 +95,23 @@
 Adafruit_LIS3DH axl1 = Adafruit_LIS3DH();
 Adafruit_LIS3DH axl2 = Adafruit_LIS3DH();
 
-
 bool Ready = false;
 bool Cleaning = false;
-int Descend = 0;
+bool Descend = false;
+
+int hinge_step = 0;
+int align = 0;
 int Sensor_Trigger = 0;
-int Speed_Low = 125;
+
+int Speed_Low = 150;
 int Speed_Medium = 205;
 int Speed_Fast = 250; 
+
 int SensorMeasurements[SENSOR_AMOUNT][SIZE_OF_BUFFER];
 int BufferOut[SENSOR_AMOUNT];
 int stair_pass;
+char incomingByte;
+int angletemp = 270;
 
 
 void setup() {
@@ -145,22 +154,23 @@ void setup() {
 	Serial.begin(115200);
 	delay(20);
 	Serial.println("A1xell Setup");
+	AXLSetup();
 	delay(20);
-	//AXLSetup();
 	Serial.println("End of Setup");
+	for(int i = 0; i < SIZE_OF_BUFFER;i++) Sensor_Read();
   }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
-//Motors_Test();
-//		HingeUp(Speed_Medium);
+	// put your main code here, to run repeatedly:
+	//Motors_Test();
 	if(digitalRead(GOUP)){
 		Ready =true;
 		stair_pass = TURNING_CW;
 		// Test_Forward(200);
 		// Motors_Test();
-		 // Move_back(Speed_Medium);
+		// Move_back(Speed_Medium);
+		// Hinge(-Speed_Medium);
+		// delay(1000);
 		// Stop();
 		Serial.println("Start");
 		}
@@ -172,6 +182,8 @@ void loop() {
 		// Motor4(-Speed_Low);
 		//Test_Backward(200);
 		//HingeDown(Speed_Low);
+		hingeToAngle(270);
+		delay(100);
 		Stop();
 		Serial.println("End");
 		}
@@ -179,13 +191,23 @@ void loop() {
 
  		//Drive to the edge and check for cliff.
 	if(Ready){
-	Travel_Stairs();
+		Descend = checkCliff();
 	}
-	
-
-// delay(1000);
-// Stop();
-Sensor_Read();
+	if(Descend){
+		hinging();
+	}
+	if(Cleaning){
+		Travel_Stairs();
+	}
+// if (Serial.available()) {
+    // // read the incoming byte:
+    // incomingByte = Serial.read();
+	// if(incomingByte == 'u'){if(!(angletemp >= 275)) angletemp+=5;}
+	// if(incomingByte == 'i'){if(!(angletemp <= 150))angletemp-=5;}
+// }
+	Sensor_Read();
+	delay(20);
+	// hingeToAngle(angletemp);
 // static int max = 0,min = 10000,value;
 	int normalized[4];
 	normalized[0] = Normalize(BufferOut[5],735,53);
@@ -194,24 +216,26 @@ Sensor_Read();
     normalized[3] = Normalize(BufferOut[4],537,58);
 	//Serial.print("Normalized BackLeft = ");Serial.print(normalized[0]);
 	//Serial.print(" Normalized BackRight = ");Serial.println(normalized[1]);
-	Serial.print(" Normalized TopFront = ");Serial.print(normalized[2]);
-	Serial.print(" Normalized TopBack = ");Serial.print(normalized[3]);
-	
+	//Serial.print(" Normalized TopFront = ");Serial.print(normalized[2]);
+	// Serial.print(" Normalized TopBack = ");Serial.print(normalized[3]);
+	// angle = getHingeAngle();
+	// Serial.print("Angle wanted = ");Serial.print(angletemp);
 	// Serial.print("Buffer BackLeft = ");Serial.print(BufferOut[5]);
 	// Serial.print(" Buffer BackRight = ");Serial.print(BufferOut[6]);
 	// Serial.print(" Buffer TopFront = ");Serial.print(BufferOut[3]);
 	// Serial.print(" Buffer TopBack = ");Serial.print(BufferOut[4]); 
-	Serial.print(" Buffer Front = ");Serial.println(BufferOut[2]); 
+	// Serial.print(" Buffer Front = ");Serial.println(BufferOut[2]); 
 
-	// Serial.print("Angle1 = ");Serial.print(BufferOut[7]); 
+	Serial.print(" Angle1 = ");Serial.print(BufferOut[7]); 
 	// Serial.print(", Angle2 = ");Serial.print(BufferOut[8]);
-	// Serial.print(", Angle Total = ");Serial.println(BufferOut[9]);
+	Serial.print(", Angle Total = ");Serial.println(BufferOut[9]);
 }
 void Stop(void){
 	HingeOFF();	
 	MotorsOFF();
 	Ready = false;
 	Cleaning = false;
+	Descend = false;
 	digitalWrite(LIGHT,LOW);
 }
 

@@ -39,12 +39,15 @@ void Travel_Stairs(void){
 		error_distance = normalized[0]; //top back
 		error_angle = normalized[1]; //top front
 		
-		if(error_distance > 65)
+		if(error_distance > 45)
 		{
 			Serial.println("GOLEFT");
 			Motor2(Speed_Fast);
 			Motor4(-Speed_Fast);
 			// Move_left(Speed_Medium);
+		}
+		if(error_distance >70){
+			Move_left(Speed_Medium);
 		}
 		if(error_angle < 20){
 			Serial.println("TURNLEFT");

@@ -6,34 +6,33 @@ Move_left(int )
 Move_right(int )
 Turn_ccw(int )
 Turn_cw(int )
-HingeDown(int)
-HingeUp(int)
+Hinge(-int)
+Hinge(int)
 MotorsOFF()
 HingeOFF(int)
 */
 
 //b f 
-void Motors_Test(void)
-{
-  Move_back(200);
-  delay(1000);
-  Move_forward(200);
-  delay(1000);
-  Move_left(200);
-  delay(1000);
-  Move_right(200);
-  delay(1000);
-  Turn_ccw(200);
-  delay(1000);
-  Turn_cw(200);
-  delay(1000);
-  Stop();
-  delay(2000);
+void Motors_Test(void){
+	Move_back(200);
+	delay(1000);
+	Move_forward(200);
+	delay(1000);
+	Move_left(200);
+	delay(1000);
+	Move_right(200);
+	delay(1000);
+	Turn_ccw(200);
+	delay(1000);
+	Turn_cw(200);
+	delay(1000);
+	Stop();
+	delay(2000);
 }
 void Hinge_Test(void){
-  HingeDown(200);
+  Hinge(-200);
   delay(1000);
-  HingeUp(200);
+  Hinge(200);
   delay(1000);
 }
 void Motor1(int speed){
@@ -85,6 +84,18 @@ void Motor4(int speed){
 	analogWrite(M4PWM,-speed);
 	digitalWrite(M4P1,LOW);
 	digitalWrite(M4P2,HIGH);
+	}
+}
+void Motor5(int speed){
+	if(speed >= 0){
+	analogWrite(M5PWM,speed);
+	digitalWrite(M5P1,HIGH);
+	digitalWrite(M5P2,LOW);
+	}
+	else {
+	analogWrite(M5PWM,-speed);
+	digitalWrite(M5P1,LOW);
+	digitalWrite(M5P2,HIGH);
 	}
 }
 void Move_left(int speed){
@@ -195,57 +206,60 @@ void Turn_ccw(int speed){
   digitalWrite(M4P1,LOW);
   digitalWrite(M4P2,HIGH);
   }
-void HingeUp(int speed){
-  analogWrite(HMPWM,speed);
-  digitalWrite(HMP1,HIGH);
-  digitalWrite(HMP2,LOW);
-  }
-void HingeDown(int speed){
-  //Move hinge motor clockwise
-  analogWrite(HMPWM,speed);
-  digitalWrite(HMP1,LOW);
-  digitalWrite(HMP2,HIGH);
-  }
+void Hinge(int speed){
+	if(speed >= 0){
+	analogWrite(HMPWM,speed);
+	digitalWrite(HMP1,HIGH);
+	digitalWrite(HMP2,LOW);
+	}
+	else{  //Move hinge motor clockwise
+	analogWrite(HMPWM,-speed);
+	digitalWrite(HMP1,LOW);
+	digitalWrite(HMP2,HIGH);
+	}
+}
+
 void HingeOFF(void){
-  //Move hinge motor counter-clockwise
-  analogWrite(HMPWM,0);
-  digitalWrite(HMP1,LOW);
-  digitalWrite(HMP2,LOW);
-  }
+	//Move hinge motor counter-clockwise
+	analogWrite(HMPWM,0);
+	digitalWrite(HMP1,LOW);
+	digitalWrite(HMP2,LOW);
+}
 void MotorsOFF(void){
-  //Stop motor 1
-  analogWrite(M1PWM,0);
-  digitalWrite(M1P1,LOW);
-  digitalWrite(M1P2,LOW);
-  //Stop motor 2  
-  analogWrite(M2PWM,0);
-  digitalWrite(M2P1,LOW);
-  digitalWrite(M2P2,LOW);
-  //Stop motor 3 
-  analogWrite(M3PWM,0);
-  digitalWrite(M3P1,LOW); 
-  digitalWrite(M3P2,LOW);
-  //Stop motor 4  
-  analogWrite(M4PWM,0);
-  digitalWrite(M4P1,LOW);
-  digitalWrite(M4P2,LOW);
+	//Stop motor 1
+	analogWrite(M1PWM,0);
+	digitalWrite(M1P1,LOW);
+	digitalWrite(M1P2,LOW);
+	//Stop motor 2	
+	analogWrite(M2PWM,0);
+	digitalWrite(M2P1,LOW);
+	digitalWrite(M2P2,LOW);
+	//Stop motor 3 
+	analogWrite(M3PWM,0);
+	digitalWrite(M3P1,LOW); 
+	digitalWrite(M3P2,LOW);
+	//Stop motor 4	
+	analogWrite(M4PWM,0);
+	digitalWrite(M4P1,LOW);
+	digitalWrite(M4P2,LOW);
+	Motor5(0);
   }
 void Break(void){
-  //Move motor 1 CCW
-  analogWrite(M1PWM,200);
-  digitalWrite(M1P1,LOW);
-  digitalWrite(M1P2,HIGH);
-  //Move motor 2 CW 
-  analogWrite(M2PWM,200);
-  digitalWrite(M2P1,LOW);
-  digitalWrite(M2P2,HIGH);
-  //Stop motor 3
-  analogWrite(M3PWM,0);
-  digitalWrite(M3P1,LOW); 
-  digitalWrite(M3P2,LOW);
-  //Stop motor 4  
-  analogWrite(M4PWM,0);
-  digitalWrite(M4P1,LOW);
-  digitalWrite(M4P2,LOW);
-  delay(100);
-  }
+	//Move motor 1 CCW
+	analogWrite(M1PWM,200);
+	digitalWrite(M1P1,LOW);
+	digitalWrite(M1P2,HIGH);
+	//Move motor 2 CW 
+	analogWrite(M2PWM,200);
+	digitalWrite(M2P1,LOW);
+	digitalWrite(M2P2,HIGH);
+	//Stop motor 3
+	analogWrite(M3PWM,0);
+	digitalWrite(M3P1,LOW); 
+	digitalWrite(M3P2,LOW);
+	//Stop motor 4	
+	analogWrite(M4PWM,0);
+	digitalWrite(M4P1,LOW);
+	digitalWrite(M4P2,LOW);
+	delay(100);
+}

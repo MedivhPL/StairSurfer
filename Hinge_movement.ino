@@ -10,121 +10,121 @@
 // #define UP 4
 // #define CHECK_STEPS 5
 // #define STOP 6
+void hingeToAngle(int angle){
+	static int error, error_previous, kp, kd, ki,c_out;
+	static int integral;
+	//Serial.println(angle);
+	if (angle > 270) angle = 270;
+	if (angle < 150) angle = 150;
+	
+	error = angle - BufferOut[9];
+	kp = 5 * error;
+	kd = 5 * (error - error_previous);
+	integral += (error + error_previous)/2;
+	// Serial.print("int = ");Serial.print(integral);
 
-int hinge_step = 0;
-int descending = 0;
+	ki = .1 * (integral);
+	c_out = kp + kd + ki;
+	if (c_out <= 60 && c_out >= -60) c_out = 0;
+	if (c_out > 120) c_out = 120;
+	if (c_out < -120) c_out = -120;
+	Hinge(c_out);
+	if(integral > 500)integral = 500;
+	if(integral < -500)integral = -500;
+	// Serial.print("kp = ");Serial.print(kp);
+	// Serial.print("kd = ");Serial.print(kd);
+	// Serial.print("ki = ");Serial.print(ki);
+	// Serial.print("int = ");Serial.print(integral);
+	// Serial.print("er_pr = ");Serial.println(error_previous);
+
+	
+	error_previous = error;
+}
 
 bool checkCliff(void){
-	switch(descending){
+	switch(align){
 		case ALIGNED:
 			if(Cliff_Sensor_Read(CSL,CSLT) && Cliff_Sensor_Read(CSR,CSRT)){
-				//descending = HINGE;
-				Serial.println("Stopped");
+				Serial.println("Finished");
 				MotorsOFF();
+				Ready = false;
+				align = DONE;
+				hinge_step = DOWN;
 				return true;
 			}
 			else{
-				descending = ADJUST_DIR;
+				align = ADJUST_DIR;
 				return false;
 			break;
 		}
 		case ADJUST_DIR:{
+			if(!Cliff_Sensor_Read(CSL,CSLT) && !Cliff_Sensor_Read(CSR,CSRT)){
+				Move_back(Speed_Medium);
+				Serial.println("Going Back");
+			}
 			if(!Cliff_Sensor_Read(CSL,CSLT) && Cliff_Sensor_Read(CSR,CSRT)){
-				Turn_cw(Speed_Low);  //left forward
+				Turn_cw(Speed_Low);	 //left forward
 				Serial.println("Turning Left");
 			}
 			else if(Cliff_Sensor_Read(CSL,CSLT) && !Cliff_Sensor_Read(CSR,CSRT)){
 				Turn_ccw(Speed_Low); //right forward
 				Serial.println("Turning Right");
 			}
-			else if(!Cliff_Sensor_Read(CSL,CSLT) && !Cliff_Sensor_Read(CSR,CSRT)){
-				Move_back(Speed_Low);
-				Serial.println("Going Back");
-			}
-			else{
+			if(Cliff_Sensor_Read(CSL,CSLT) && Cliff_Sensor_Read(CSR,CSRT)){
+				Serial.println("Finished");
 				MotorsOFF();
-				stair_pass = TURNING_CW;
 				Ready = false;
-				return true;//descending = HINGE;
+				align = DONE;
+				hinge_step = DOWN;
+				return true;
 			}			
 			break;
 		}
-		case HINGE:{
-			Serial.println("HINGING");
-			hinging();
-			if(hinge_step=STOP){
-				hinge_step=DOWN;
-				descending=ALIGNED;
-			}
-			else
-				descending=HINGE;
-				break;
-		}
+		default: align = ALIGNED; break;
 	}
 	return false;
 }
 void hinging(void){
 	switch(hinge_step){
-		case DOWN:{
-			Serial.println("HingeDown");
-			//HingeDown(Speed_Low);
-			delay(200);
-			HingeOFF();
-			hinge_step=GOFORWARD;
-			break;
-			}
-		case GOFORWARD:{
-			Serial.println("GOFORWARD");
-			//Move_forward(Speed_Low);
-			delay(200);
-			MotorsOFF();
+		case DOWN:
+			Serial.println("Hinge Down");
+			hingeToAngle(160);
+			Move_forward(Speed_Medium);
+			Motor5(Speed_Medium);
 			hinge_step=CHECK_SENSORS;
-			break;
-			}
-		case CHECK_SENSORS:{
 			Serial.println("Sensors check");
-			if(analogRead(DSBL)>600 || analogRead(DSBR)>600){
-				hinge_step=HINGE_DOWN_ONCE;
-			}
-			else
-				hinge_step=DOWN;
 			break;
+		case CHECK_SENSORS:
+			hingeToAngle(BufferOut[9] - 3);
+			if(Cliff_Sensor_Read(DSF,DSFT)){
+				hinge_step=UP;
+				Hinge(0);
+				Motor5(-Speed_Low);
+				Serial.println("Hinge Up");
 			}
-		case HINGE_DOWN_ONCE:{
-			Serial.println("Once more down");
-			//HingeDown(Speed_Low);
-			delay(200);
-			HingeOFF();
-			//move_forward(Speed_Low);
-			delay(200);
-			MotorsOFF();
-			hinge_step=UP;
 			break;
-			}
-		case UP:{
-			Serial.println("HingeUp");
-			//HingeUp(Speed_Low);
-			delay(200);
-			HingeOFF();
-			hinge_step=CHECK_STEPS;
-			break;
-			}
-		case CHECK_STEPS:{
+			
+		case UP:
+			Move_forward(Speed_Low);
+			hinge_step = CHECK_STEPS;
 			Serial.println("Steps");
-			if(analogRead(DSBL)>600 || analogRead(DSBR)>600){
+			break;
+			
+		case CHECK_STEPS:
+			if(BufferOut[7] > 5){
+				hingeToAngle(BufferOut[9] + 3);
+			}
+			else{
 				hinge_step=STOP;
 			}
-			else
-				hinge_step=UP;
 			break;
-			}
-		case STOP:{
+		case STOP:
 			Serial.println("STOP");
 			HingeOFF();
 			MotorsOFF();
+			//Stop();
 			hinge_step=STOP;
 			break;
-			}
 	}
 }
 			
