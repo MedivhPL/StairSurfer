@@ -4,8 +4,10 @@
 // #define TURNING_CCW2 3
 // #define DONE 4
 // #define TURNING_CW 5
-
-void Travel_Stairs(void){
+bool distance_Check(int buffer, int threshold){
+	return buffer < threshold;
+}
+bool Travel_Stairs(void){
 	int DSTF_THRESHOLD = 300;
 	int DSTB_THRESHOLD = 300;
 	int DSBL_THRESHOLD = 200;
@@ -25,14 +27,14 @@ void Travel_Stairs(void){
 	//line up with wall
     //pass both sensor reading tests
     //
-    normalized[0] = Normalize(BufferOut[4],537,58);
-	normalized[1] = Normalize(BufferOut[3],650,63);
-	normalized[2] = Normalize(BufferOut[5],735,53);
-	normalized[3] = Normalize(BufferOut[6],671,52);
+	normalized[0] = Normalize(BufferOut[5],735,53);
+	normalized[1] = Normalize(BufferOut[6],671,52);
+	normalized[2] = Normalize(BufferOut[3],650,100);
+    normalized[3] = Normalize(BufferOut[4],537,270);
 	switch(stair_pass){
 		
 		case FIRSTPASS:
-		if(!Cliff_Sensor_Read(DSBL,DSBLT) || !Cliff_Sensor_Read(DSBR,DSBRT)){
+		if(!distance_Check(BufferOut[5],DSBLT) || !distance_Check(BufferOut[6],DSBRT)){
 			Serial.println("GOBACK");
 			Move_back(Speed_Medium);
 			}
@@ -42,7 +44,7 @@ void Travel_Stairs(void){
 		if(error_distance > 45)
 		{
 			Serial.println("GOLEFT");
-			Motor2(Speed_Fast);
+			Motor2(-Speed_Fast);
 			Motor4(-Speed_Fast);
 			// Move_left(Speed_Medium);
 		}
@@ -58,11 +60,11 @@ void Travel_Stairs(void){
 		}
 		else if(error_angle > 45){
 			Serial.println("TURNRIGHT");
-			Motor2(Speed_Fast);	
+			Motor2(-Speed_Fast);	
 			Motor3(-Speed_Fast);
 			//Turn_ccw(Speed_Medium);
 		}
-		if(Cliff_Sensor_Read(DSBL,DSBLT) && Cliff_Sensor_Read(DSBR,DSBRT)){
+		if(distance_Check(BufferOut[5],DSBLT) && distance_Check(BufferOut[6],DSBRT)){
 			MotorsOFF();
 			stair_pass = TURNING_CCW;
 			}
@@ -70,7 +72,7 @@ void Travel_Stairs(void){
 		
 		case TURNING_CW: /////////////////////////////Turning
 		Turn_cw(Speed_Medium);
-		if(Cliff_Sensor_Read(DSF,DSFT)||(!Cliff_Sensor_Read(CSL,CSLT) && !Cliff_Sensor_Read(CSR,CSRT))){
+		if(distance_Check(BufferOut[2],DSFT)||(!distance_Check(BufferOut[0],CSLT) && !distance_Check(BufferOut[1],CSRT))){
 			Serial.println("TURNING");
 			stair_pass = TURNING_CW1;
 		}
@@ -78,7 +80,7 @@ void Travel_Stairs(void){
 		
 		case TURNING_CW1: /////////////////////////////Turning
 		Move_forward(Speed_Medium);
-		if(Cliff_Sensor_Read(DSF,DSFT)){
+		if(distance_Check(BufferOut[2],DSFT)){
 			Serial.println("TURNING");
 			stair_pass = FIRSTPASS;
 		}
@@ -86,14 +88,14 @@ void Travel_Stairs(void){
 		
 		case TURNING_CCW: /////////////////////Turning
 		Turn_ccw(Speed_Medium);
-		if(!Cliff_Sensor_Read(CSL,CSLT) && !Cliff_Sensor_Read(CSR,CSRT)){
+		if(!distance_Check(BufferOut[0],CSLT) && !distance_Check(BufferOut[1],CSRT)){
 			Serial.println("TURNING");
 			stair_pass = SECONDPASS;
 			}
 		break;
 		
 		case SECONDPASS:
-		if(!Cliff_Sensor_Read(DSTB,DSTBT) || !Cliff_Sensor_Read(DSTF,DSTFT)){
+		if(!distance_Check(BufferOut[4],DSTBT) || !distance_Check(BufferOut[3],DSTFT)){
 			Serial.println("GORIGHT");
 			Move_left(Speed_Medium);
 			}
@@ -102,7 +104,7 @@ void Travel_Stairs(void){
 		
 		if(error_distance > 40)
 		{
-			Motor2(Speed_Fast);
+			Motor2(-Speed_Fast);
 			Motor4(-Speed_Fast);
 			Motor3(Speed_Low);
 			// Move_back(Speed_Low);
@@ -121,11 +123,11 @@ void Travel_Stairs(void){
 		}
 		else if(error_angle < -10)
 		{
-			Motor2(Speed_Fast);
+			Motor2(-Speed_Fast);
 			Motor4(-Speed_Low);
 			//Turn_cw(Speed_Low);
 		}
-		if(Cliff_Sensor_Read(DSTB,DSTBT) && Cliff_Sensor_Read(DSTF,DSTFT)){
+		if(distance_Check(BufferOut[4],DSTBT) && distance_Check(BufferOut[3],DSTFT)){
 			MotorsOFF();
 			stair_pass = DONE;
 			}
@@ -133,12 +135,12 @@ void Travel_Stairs(void){
 		
 		case DONE:
 		MotorsOFF();
-		Cleaning = false;
+		return true;
 		default: 
 		break;
 		}
-		
-	}
+		return false;
+}
 	
 	// while(!lined_up){
       // //parrellelize

@@ -11,7 +11,7 @@ void AXLSetup(void){
   if(!axl2.begin(0x19)){
   Serial.println("Could not start back AXL");
   }
-  axl1.setRange(LIS3DH_RANGE_16_G);   // 2, 4, 8 or 16 G!
+  axl1.setRange(LIS3DH_RANGE_16_G);	  // 2, 4, 8 or 16 G!
   axl2.setRange(LIS3DH_RANGE_16_G);
   Serial.println("AXL SETUP COMPLETE");
 

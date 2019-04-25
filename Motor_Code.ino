@@ -64,13 +64,13 @@ void Motor2(int speed){
 void Motor3(int speed){
 	if(speed >= 0){
 	analogWrite(M3PWM,speed);
-	digitalWrite(M3P1,HIGH);
-	digitalWrite(M3P2,LOW);
+	digitalWrite(M3P1,LOW);
+	digitalWrite(M3P2,HIGH);
 	}
 	else {
 	analogWrite(M3PWM,-speed);
-	digitalWrite(M3P1,LOW);
-	digitalWrite(M3P2,HIGH);
+	digitalWrite(M3P1,HIGH);
+	digitalWrite(M3P2,LOW);
 	}
 }
 
@@ -109,8 +109,8 @@ void Move_left(int speed){
   digitalWrite(M2P2,LOW);
   //Move motor 3 CW
   analogWrite(M3PWM,speed);
-  digitalWrite(M3P1,HIGH);
-  digitalWrite(M3P2,LOW);
+  digitalWrite(M3P1,LOW);
+  digitalWrite(M3P2,HIGH);
   //Move motor 4 CW 
   analogWrite(M4PWM,speed);
   digitalWrite(M4P1,LOW);
@@ -127,8 +127,8 @@ void Move_right(int speed){
   digitalWrite(M2P2,HIGH);
   //Move motor 3 CCW
   analogWrite(M3PWM,speed);
-  digitalWrite(M3P1,LOW); 
-  digitalWrite(M3P2,HIGH);
+  digitalWrite(M3P1,HIGH); 
+  digitalWrite(M3P2,LOW);
   //Move motor 4 CCW 
   analogWrite(M4PWM,speed);
   digitalWrite(M4P1,HIGH);
@@ -145,8 +145,8 @@ void Move_forward(int speed){
   digitalWrite(M2P2,HIGH);
   //Move motor 3 CCW
   analogWrite(M3PWM,speed);
-  digitalWrite(M3P1,HIGH)  ;
-  digitalWrite(M3P2,LOW);
+  digitalWrite(M3P1,LOW)  ;
+  digitalWrite(M3P2,HIGH);
   //Move motor 4 CW 
   analogWrite(M4PWM,speed);
   digitalWrite(M4P1,HIGH);
@@ -163,8 +163,8 @@ void Move_back(int speed){
   digitalWrite(M2P2,LOW);
   //Move motor 3 CCW
   analogWrite(M3PWM,speed);
-  digitalWrite(M3P1,LOW); 
-  digitalWrite(M3P2,HIGH);
+  digitalWrite(M3P1,HIGH); 
+  digitalWrite(M3P2,LOW);
   //Move motor 4 CW 
   analogWrite(M4PWM,speed);
   digitalWrite(M4P1,LOW);
@@ -181,8 +181,8 @@ void Turn_cw(int speed){
   digitalWrite(M2P2,LOW);
   //Move motor 3 CW
   analogWrite(M3PWM,speed);
-  digitalWrite(M3P1,LOW);
-  digitalWrite(M3P2,HIGH);
+  digitalWrite(M3P1,HIGH);
+  digitalWrite(M3P2,LOW);
   //Move motor 4 CW 
   analogWrite(M4PWM,speed);
   digitalWrite(M4P1,HIGH);
@@ -199,8 +199,8 @@ void Turn_ccw(int speed){
   digitalWrite(M2P2,HIGH);
   //Move motor 3 CCW
   analogWrite(M3PWM,speed);
-  digitalWrite(M3P1,HIGH); 
-  digitalWrite(M3P2,LOW);
+  digitalWrite(M3P1,LOW); 
+  digitalWrite(M3P2,HIGH);
   //Move motor 4 CCW 
   analogWrite(M4PWM,speed);
   digitalWrite(M4P1,LOW);
